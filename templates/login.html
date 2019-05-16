@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Wall</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $(document).on('click', '.deleteBTN', function (){
+                var message_id=$(this).attr('message_id')
+                console.log("click click click")
+                $.ajax({
+                    method:"POST",
+                    url:"/delete",
+                    data: { id: message_id }
+                })
+                .done(function(){
+                    $('div.left_message'+message_id).hide()
+                    $('.deleteBTN'+message_id).hide()
+                })
+            })
+            $(document).on('click', '.sendBTN', function (){
+                var friend_id = $(this).attr('friend_id')
+                var comment = $(".comment"+friend_id).val()
+                console.log("comment:",comment)
+                $.ajax({
+                    method:"POST",
+                    url:"/post",
+                    data: { comment: comment, friend_id: friend_id }
+                })
+                .done(function(){
+                    $(".comment"+friend_id).val('')
+                })
+            })
+        })
+    </script>
+</head>
+<style>
+    .success{
+        color: green;
+    }
+    .deleteBTN{
+        background : url("static/delete.png");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center; 
+        width:20px;
+    }
+    .left_message, input.delete{
+        vertical-align: middle;
+        display: inline-block;
+    }
+    .left_body, .right_body{
+        width:49%;
+        vertical-align: top;
+        display: inline-block;
+    }
+    .right_body p, textarea,.right_body a{
+        display: inline-block;
+        vertical-align: top;
+        margin:10px;
+    }
+    textarea{
+        width:400px;
+    }
+    form.delete{
+        display: inline-block;
+    }
+
+</style>
+<body>
+    <nav class="navbar navbar-light bg-light">
+        {% if isLoggedIn: %}
+            <span class="navbar-brand my-2 my-lg-0 h1">CodingDojo Wall</span>
+        <div class="right_nav">
+            <span>Welcome, {{ name }}! </span>
+        {% endif %}
+        <a href="/logout">Logout</a>
+        </div>
+    </nav>
+    {% with messages = get_flashed_messages(category_filter=["register"]) %}     <!-- declare a variable called messages -->
+    {% if messages %}                            <!-- check if there are any messages -->
+        {% for message in messages %}            <!-- loop through the messages -->
+            <p class="success">{{message}}</p>                   <!-- display each message in a paragraph tag -->
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <div class="left_body container overflow-auto text-wrap">
+        <h3> {{ messages|length }} Message(s) for You </h3>
+        <table>
+            <tbody>
+                {% for message in messages %}
+                <tr>
+                    <div class="left_content">
+                        <td>
+                            <div class="left_message{{message.id}}">
+                                <p>{{ message.name_from }} said ({{ message.created_at }}):</p>
+                                <p>{{ message.message }}</p>
+                            </div>
+                        </td>
+                        <input type="hidden" name="id" value="{{message.id}}">
+                        <td><button class="deleteBTN deleteBTN{{message.id}}" value="" message_id="{{message.id}}"> .</button></td>
+                    </div>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="right_body container overflow-auto">
+        <h3> Send Messages </h3>
+        <div id="sendMsg"></div>
+        {% with messages = get_flashed_messages(category_filter=["sent"]) %}     <!-- declare a variable called messages -->
+        {% if messages %}                            <!-- check if there are any messages -->
+            {% for message in messages %}            <!-- loop through the messages -->
+                <p class="success">{{message}}</p>                   <!-- display each message in a paragraph tag -->
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <table>
+            <tbody>
+                {% for friend in friends %}
+                <tr>
+                    <td><p>{{ friend.fname }} {{ friend.lname }}</p></td>
+                    <td><textarea class="comment comment{{friend.id}}"></textarea></td>
+                    <input type="hidden" value="{{friend.id}}" name="friend_id">
+                    <td><button class="sendBTN" friend_id={{friend.id}}>Send</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
